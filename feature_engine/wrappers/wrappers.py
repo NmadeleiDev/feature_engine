@@ -190,6 +190,7 @@ class SklearnTransformerWrapper(BaseEstimator, TransformerMixin):
         self,
         transformer,
         variables: Union[None, int, str, List[Union[str, int]]] = None,
+        use_output_features_for_function_transformer: bool = False,
     ) -> None:
 
         if not issubclass(transformer.__class__, TransformerMixin):
@@ -234,6 +235,8 @@ class SklearnTransformerWrapper(BaseEstimator, TransformerMixin):
 
         self.transformer = transformer
         self.variables = _check_init_parameter_variables(variables)
+
+        self.use_output_features_for_function_transformer = use_output_features_for_function_transformer
 
     def fit(self, X: pd.DataFrame, y: Optional[str] = None):
         """
@@ -319,10 +322,12 @@ class SklearnTransformerWrapper(BaseEstimator, TransformerMixin):
         if self.transformer_.__class__.__name__ in [
             "OneHotEncoder",
             "PolynomialFeatures",
-        ]:
+        ] or (self.use_output_features_for_function_transformer and self.transformer_.__class__.__name__ == "FunctionTransformer"):
+            data=self.transformer_.transform(X[self.variables_])
+            columns = data.columns if self.transformer_.__class__.__name__ == "FunctionTransformer" else self.transformer_.get_feature_names_out(self.variables_)
             new_features_df = pd.DataFrame(
-                data=self.transformer_.transform(X[self.variables_]),
-                columns=self.transformer_.get_feature_names_out(self.variables_),
+                data=data,
+                columns=columns,
                 index=X.index,
             )
             X = pd.concat([X.drop(columns=self.variables_), new_features_df], axis=1)

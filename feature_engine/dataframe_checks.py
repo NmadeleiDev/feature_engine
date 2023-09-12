@@ -235,8 +235,8 @@ def _check_X_matches_training_df(X: pd.DataFrame, reference: int) -> None:
 
     if X.shape[1] != reference:
         raise ValueError(
-            "The number of columns in this dataset is different from the one used to "
-            "fit this transformer (when using the fit() method)."
+            f"The number of columns in this dataset ({X.shape[1]}) is different from the one used to "
+            f"fit this transformer (when using the fit() method ({reference}))."
         )
 
     return None
